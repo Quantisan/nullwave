@@ -4,6 +4,9 @@ GEM
     ffi (1.4.0)
     ffi-portaudio (0.1.2)
       ffi
+    fftw3 (0.3)
+      narray
+    narray (0.6.0.8)
     wavefile (0.5.0)
 
 PLATFORMS
@@ -12,4 +15,5 @@ PLATFORMS
 DEPENDENCIES
   ffi
   ffi-portaudio
+  fftw3
   wavefile

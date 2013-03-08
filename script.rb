@@ -14,44 +14,21 @@ include FFI::PortAudio
 #   end
 # end
 
-def moving_average(array, window_size)
-  ma = [] 
-  window = []
-  array.each do |val|
-    if(window.size < window_size)
-      ma << val
-    else
-      ma << window.reduce(0){|sum, v| sum+=v; sum }/window_size
-      window.shift
-    end
-    window << val
-  end
-  ma
-end
-
-WINDOW = 1024
 class TestStream < FFI::PortAudio::Stream
-  
-  # def initialize
-  #   @max = 1
-  #   @fourier = FourierTransform.new(1024, 44100)
-  # end  
-  
-  def negate(x)
-    if x == -32768
-      32767
-    elsif x == 32767
-      -32768
-    else
-      x * -1
-    end
-  end
-  
+    
   def process(input, output, frameCount, timeInfo, statusFlags, userData)
     begin
-      x = input.read_array_of_int32(frameCount).map {|x| [x].pack("l").unpack("ss").map {|x| x * -1}.pack("ss").unpack("l")}.flatten
-      x = moving_average(x, 5)
-      output.write_array_of_int32(x)
+      
+      data  = input.read_array_of_int32(frameCount)
+      na    = NArray.to_na(data)
+
+      fc  = FFTW3.fft(na) / na.length
+      fc  = NArray.to_na(fc.to_a.map {|i| i * -1})
+      nc  = FFTW3.ifft(fc)           
+      # nb  = nc.real
+      # x   = nb.to_a
+
+      output.write_array_of_int32(nc.real.to_a)
     rescue => e
       p e.message
     end    
