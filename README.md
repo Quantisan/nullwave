@@ -14,6 +14,10 @@ The 2d-spectrographic below illustrate a recorded [10-second wav file](./data/am
 
 ![spectrographic plot of original and inversed audio](./spectro.png)
 
+## Execute
+
+To run the program, do `bundle exec ruby script.rb`
+
 ## Credits
 
 A Forward hackday project by [Max](https://github.com/maxdupenois), [Sid](https://github.com/sdawara), and [Paul](https://github.com/Quantisan).
