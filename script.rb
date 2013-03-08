@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'bundler'
+require 'fftw3'
 Bundler.require
 
 include WaveFile
@@ -51,15 +52,6 @@ class TestStream < FFI::PortAudio::Stream
       # x   = nb.to_a
 
       output.write_array_of_int32(nc.real.to_a)
-=======
-      original = input.read_array_of_int32(frameCount)
-      @@original += original if(@@original.size < SAMPLE_LENGTH)
-
-      x = original.map {|x| [x].pack("l").unpack("ss").map {|x| x * -1}.pack("ss").unpack("l")}.flatten
-      x = moving_average(x, 5)
-      @@transformed += x  if(@@transformed.size < SAMPLE_LENGTH)
-      output.write_array_of_int32(x)
->>>>>>> 34b419c8fc1897ec1ec8f49034916be784033dce
     rescue => e
       p e.message
     end    
