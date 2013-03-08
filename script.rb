@@ -14,6 +14,21 @@ include FFI::PortAudio
 #   end
 # end
 
+def moving_average(array, window_size)
+  ma = [] 
+  window = []
+  array.each do |val|
+    if(window.size < window_size)
+      ma << val
+    else
+      ma << window.reduce(0){|sum, v| sum+=v; sum }/window_size
+      window.shift
+    end
+    window << val
+  end
+  ma
+end
+
 WINDOW = 1024
 class TestStream < FFI::PortAudio::Stream
   
@@ -35,8 +50,7 @@ class TestStream < FFI::PortAudio::Stream
   def process(input, output, frameCount, timeInfo, statusFlags, userData)
     begin
       x = input.read_array_of_int32(frameCount).map {|x| [x].pack("l").unpack("ss").map {|x| x * -1}.pack("ss").unpack("l")}.flatten
-      p x.inspect
-      # x = input.read_array_of_int32(frameCount).map {|x| x * -1}
+      x = moving_average(x, 5)
       output.write_array_of_int32(x)
     rescue => e
       p e.message
