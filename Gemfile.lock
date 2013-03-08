@@ -1,0 +1,10 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    wavefile (0.5.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  wavefile
