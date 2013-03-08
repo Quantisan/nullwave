@@ -20,4 +20,4 @@ To run the program, do `bundle exec ruby script.rb`
 
 ## Credits
 
-A Forward hackday project by [Max](https://github.com/maxdupenois), [Sid](https://github.com/sdawara), and [Paul](https://github.com/Quantisan).
+A Forward hackday project by [Max](https://github.com/maxdupenois), [Sid](https://github.com/sdawara), [James](https://github.com/scarybot), and [Paul](https://github.com/Quantisan).
