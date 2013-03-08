@@ -27,23 +27,21 @@ API.Pa_Initialize
 input = API::PaStreamParameters.new
 input[:device] = API.Pa_GetDefaultInputDevice
 input[:channelCount] = 1
-input[:sampleFormat] = API::Int16
-input[:suggestedLatency] = 0
+input[:sampleFormat] = API::Float32
+input[:suggestedLatency] = 5
 input[:hostApiSpecificStreamInfo] = nil
 
 
 output = API::PaStreamParameters.new
 output[:device] = 1
 output[:channelCount] = 1
-output[:sampleFormat] = API::Int16
-output[:suggestedLatency] = 0
+output[:sampleFormat] = API::Float32
+output[:suggestedLatency] = 5
 output[:hostApiSpecificStreamInfo] = nil
 
 stream = TestStream.new
 stream.open(input, output, 44100, 1024)
 stream.start
-
-puts output.inspect
 
 at_exit { 
   stream.close
