@@ -33,6 +33,8 @@ end
 @@original = []
 @@transformed = []
 
+SAMPLE_LENGTH = 8 * 44100
+
 WINDOW = 1024
 class TestStream < FFI::PortAudio::Stream
   
@@ -54,10 +56,11 @@ class TestStream < FFI::PortAudio::Stream
   def process(input, output, frameCount, timeInfo, statusFlags, userData)
     begin
       original = input.read_array_of_int32(frameCount)
-      @@original += original if(@@original.size < 8*1024)
+      @@original += original if(@@original.size < SAMPLE_LENGTH)
+
       x = original.map {|x| [x].pack("l").unpack("ss").map {|x| x * -1}.pack("ss").unpack("l")}.flatten
       x = moving_average(x, 5)
-      @@transformed += x  if(@@transformed.size < 8*1024)
+      @@transformed += x  if(@@transformed.size < SAMPLE_LENGTH)
       output.write_array_of_int32(x)
     rescue => e
       p e.message
@@ -97,18 +100,23 @@ at_exit {
 }
 
 
-
+@@written = false
 loop do 
   sleep 1 
-  if(@@transformed.size >= 8*1024)
+  if(@@transformed.size >= SAMPLE_LENGTH && !@@written)
     original_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
     transformed_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
     Writer.new(File.join(File.dirname(__FILE__), *%w[data transformed.wav]), Format.new(:stereo, :pcm_16, 44100)) do |writer|
-      Buffer.new(transformed_as_pairs, Format.new(:stereo, :pcm_16, 44100))
+      transformed_as_pairs.each_slice(44100) do |pairs|
+        writer.write(Buffer.new(pairs, Format.new(:stereo, :pcm_16, 44100)))
+      end
     end
     Writer.new(File.join(File.dirname(__FILE__), *%w[data original.wav]), Format.new(:stereo, :pcm_16, 44100)) do |writer|
-      Buffer.new(original_as_pairs, Format.new(:stereo, :pcm_16, 44100))
+      original_as_pairs.each_slice(44100) do |pairs|
+        writer.write(Buffer.new(pairs, Format.new(:stereo, :pcm_16, 44100)))
+      end
     end
+    @@written = true
   end
   
 end
