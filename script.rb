@@ -14,6 +14,14 @@ include FFI::PortAudio
 #   end
 # end
 
+class TestStream < FFI::PortAudio::Stream
+  def process(input, output, frameCount, timeInfo, statusFlags, userData)
+    output.write_array_of_float(input.read_array_of_float(frameCount).map {|x| x * -1})
+
+    :paContinue    
+  end
+end
+
 API.Pa_Initialize
 
 input = API::PaStreamParameters.new
@@ -23,17 +31,24 @@ input[:sampleFormat] = API::Int16
 input[:suggestedLatency] = 0
 input[:hostApiSpecificStreamInfo] = nil
 
+
 output = API::PaStreamParameters.new
-output[:device] = API.Pa_GetDefaultOutputDevice
+output[:device] = 1
 output[:channelCount] = 1
 output[:sampleFormat] = API::Int16
 output[:suggestedLatency] = 0
 output[:hostApiSpecificStreamInfo] = nil
 
-stream = FFI::PortAudio::Stream.new
+stream = TestStream.new
 stream.open(input, output, 44100, 1024)
 stream.start
-while 1 == 1 do
-  p "OMG"
-end
+
 puts output.inspect
+
+at_exit { 
+  stream.close
+  API.Pa_Terminate
+}
+
+loop { sleep 1 }
+
