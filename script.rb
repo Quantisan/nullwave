@@ -14,9 +14,33 @@ include FFI::PortAudio
 #   end
 # end
 
+WINDOW = 1024
 class TestStream < FFI::PortAudio::Stream
+  
+  # def initialize
+  #   @max = 1
+  #   @fourier = FourierTransform.new(1024, 44100)
+  # end  
+  
+  def negate(x)
+    if x == -32768
+      32767
+    elsif x == 32767
+      -32768
+    else
+      x * -1
+    end
+  end
+  
   def process(input, output, frameCount, timeInfo, statusFlags, userData)
-    output.write_array_of_float(input.read_array_of_float(frameCount).map {|x| x * -1})
+    begin
+      x = input.read_array_of_int32(frameCount).map {|x| [x].pack("l").unpack("ss").map {|x| x * -1}.pack("ss").unpack("l")}.flatten
+      p x.inspect
+      # x = input.read_array_of_int32(frameCount).map {|x| x * -1}
+      output.write_array_of_int32(x)
+    rescue => e
+      p e.message
+    end    
 
     :paContinue    
   end
@@ -27,16 +51,16 @@ API.Pa_Initialize
 input = API::PaStreamParameters.new
 input[:device] = API.Pa_GetDefaultInputDevice
 input[:channelCount] = 1
-input[:sampleFormat] = API::Float32
-input[:suggestedLatency] = 5
+input[:sampleFormat] = API::Int32
+input[:suggestedLatency] = 0
 input[:hostApiSpecificStreamInfo] = nil
 
 
 output = API::PaStreamParameters.new
 output[:device] = 1
 output[:channelCount] = 1
-output[:sampleFormat] = API::Float32
-output[:suggestedLatency] = 5
+output[:sampleFormat] = API::Int32
+output[:suggestedLatency] = 0
 output[:hostApiSpecificStreamInfo] = nil
 
 stream = TestStream.new
