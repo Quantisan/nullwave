@@ -33,7 +33,7 @@ input[:hostApiSpecificStreamInfo] = nil
 
 
 output = API::PaStreamParameters.new
-output[:device] = 1
+output[:device] = API.Pa_GetDefaultOutputDevice
 output[:channelCount] = 1
 output[:sampleFormat] = API::Float32
 output[:suggestedLatency] = 5
