@@ -80,34 +80,11 @@ stream.open(input, output, 44100, WINDOW)
 stream.start
 
 
+@@run = true
+p "Started, press [Enter] to stop"
+gets
 
+p "Stopped"
 
-at_exit { 
-  stream.close
-  API.Pa_Terminate
-}
-
-
-@@written = false
-loop do 
-  sleep 1 
-
-  ## write input and output streams to wav file. doesn't work.
-  if(@@transformed.size >= SAMPLE_LENGTH && !@@written)
-    original_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
-    transformed_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
-    Writer.new(File.join(File.dirname(__FILE__), *%w[data transformed.wav]), Format.new(:stereo, :pcm_16, 44100)) do |writer|
-      transformed_as_pairs.each_slice(44100) do |pairs|
-        writer.write(Buffer.new(pairs, Format.new(:stereo, :pcm_16, 44100)))
-      end
-    end
-    Writer.new(File.join(File.dirname(__FILE__), *%w[data original.wav]), Format.new(:stereo, :pcm_16, 44100)) do |writer|
-      original_as_pairs.each_slice(44100) do |pairs|
-        writer.write(Buffer.new(pairs, Format.new(:stereo, :pcm_16, 44100)))
-      end
-    end
-    @@written = true
-  end
-  
-end
-
+API.Pa_Terminate
+exit! 0
