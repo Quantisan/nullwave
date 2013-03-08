@@ -14,6 +14,28 @@ include FFI::PortAudio
 #   end
 # end
 
+def moving_average(array, window_size)
+  ma = [] 
+  window = []
+  array.each do |val|
+    if(window.size < window_size)
+      ma << val
+    else
+      ma << window.reduce(0){|sum, v| sum+=v; sum }/window_size
+      window.shift
+    end
+    window << val
+  end
+  ma
+end
+
+
+@@original = []
+@@transformed = []
+
+SAMPLE_LENGTH = 8 * 44100
+
+WINDOW = 1024
 class TestStream < FFI::PortAudio::Stream
     
   def process(input, output, frameCount, timeInfo, statusFlags, userData)
@@ -29,6 +51,15 @@ class TestStream < FFI::PortAudio::Stream
       # x   = nb.to_a
 
       output.write_array_of_int32(nc.real.to_a)
+=======
+      original = input.read_array_of_int32(frameCount)
+      @@original += original if(@@original.size < SAMPLE_LENGTH)
+
+      x = original.map {|x| [x].pack("l").unpack("ss").map {|x| x * -1}.pack("ss").unpack("l")}.flatten
+      x = moving_average(x, 5)
+      @@transformed += x  if(@@transformed.size < SAMPLE_LENGTH)
+      output.write_array_of_int32(x)
+>>>>>>> 34b419c8fc1897ec1ec8f49034916be784033dce
     rescue => e
       p e.message
     end    
@@ -58,10 +89,33 @@ stream = TestStream.new
 stream.open(input, output, 44100, 1024)
 stream.start
 
+
+
+
 at_exit { 
   stream.close
   API.Pa_Terminate
 }
 
-loop { sleep 1 }
+
+@@written = false
+loop do 
+  sleep 1 
+  if(@@transformed.size >= SAMPLE_LENGTH && !@@written)
+    original_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
+    transformed_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
+    Writer.new(File.join(File.dirname(__FILE__), *%w[data transformed.wav]), Format.new(:stereo, :pcm_16, 44100)) do |writer|
+      transformed_as_pairs.each_slice(44100) do |pairs|
+        writer.write(Buffer.new(pairs, Format.new(:stereo, :pcm_16, 44100)))
+      end
+    end
+    Writer.new(File.join(File.dirname(__FILE__), *%w[data original.wav]), Format.new(:stereo, :pcm_16, 44100)) do |writer|
+      original_as_pairs.each_slice(44100) do |pairs|
+        writer.write(Buffer.new(pairs, Format.new(:stereo, :pcm_16, 44100)))
+      end
+    end
+    @@written = true
+  end
+  
+end
 
