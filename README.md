@@ -4,7 +4,7 @@ Software-based [active noise control](http://en.wikipedia.org/wiki/Active_noise_
 
 Theoretically, by taking real-time audio from a computer's microphone and emiting an attenuated sound wave with the same amplitude but with inverted phase, we can cause interference to cancel out unwanted noise.
 
-The 2d-spectrographic below illustrate our recorded [10-second wav file](./data/ambience.wav) and produced an inverted wav file. When both files are played together, they cancel each other out.
+The 2d-spectrographic below illustrate a recorded [10-second wav file](./data/ambience.wav). We produced an inverted wav file using method as described. When both files are played together, they cancel each other out.
 
 ![spectrographic plot of original and inversed audio](./spectro.png)
 
