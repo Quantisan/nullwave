@@ -45,7 +45,7 @@ class TestStream < FFI::PortAudio::Stream
       na    = NArray.to_na(data)
 
       fc  = FFTW3.fft(na) / na.length
-      fc  = NArray.to_na(fc.to_a.map {|i| i * -0.5})
+      fc  = NArray.to_na(fc.to_a.map {|i| i * -1})
       nc  = FFTW3.ifft(fc)           
       # nb  = nc.real
       # x   = nb.to_a
