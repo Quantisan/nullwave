@@ -46,10 +46,8 @@ class TestStream < FFI::PortAudio::Stream
       na    = NArray.to_na(data)
 
       fc  = FFTW3.fft(na) / na.length
-      fc  = NArray.to_na(fc.to_a.map {|i| i * -1})
-      nc  = FFTW3.ifft(fc)           
-      # nb  = nc.real
-      # x   = nb.to_a
+      fc  = NArray.to_na(fc.to_a.map {|i| i * -1})  ## 180 deg phase rotation
+      nc  = FFTW3.ifft(fc)                 
 
       output.write_array_of_int32(nc.real.to_a)
     rescue => e
@@ -78,7 +76,7 @@ output[:suggestedLatency] = 0
 output[:hostApiSpecificStreamInfo] = nil
 
 stream = TestStream.new
-stream.open(input, output, 44100, 1024)
+stream.open(input, output, 44100, WINDOW)
 stream.start
 
 
@@ -93,6 +91,8 @@ at_exit {
 @@written = false
 loop do 
   sleep 1 
+
+  ## write input and output streams to wav file. doesn't work.
   if(@@transformed.size >= SAMPLE_LENGTH && !@@written)
     original_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
     transformed_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
