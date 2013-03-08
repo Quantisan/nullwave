@@ -45,21 +45,12 @@ class TestStream < FFI::PortAudio::Stream
       na    = NArray.to_na(data)
 
       fc  = FFTW3.fft(na) / na.length
-      fc  = NArray.to_na(fc.to_a.map {|i| i * -1})
+      fc  = NArray.to_na(fc.to_a.map {|i| i * -0.5})
       nc  = FFTW3.ifft(fc)           
       # nb  = nc.real
       # x   = nb.to_a
 
       output.write_array_of_int32(nc.real.to_a)
-=======
-      original = input.read_array_of_int32(frameCount)
-      @@original += original if(@@original.size < SAMPLE_LENGTH)
-
-      x = original.map {|x| [x].pack("l").unpack("ss").map {|x| x * -1}.pack("ss").unpack("l")}.flatten
-      x = moving_average(x, 5)
-      @@transformed += x  if(@@transformed.size < SAMPLE_LENGTH)
-      output.write_array_of_int32(x)
->>>>>>> 34b419c8fc1897ec1ec8f49034916be784033dce
     rescue => e
       p e.message
     end    
@@ -90,32 +81,11 @@ stream.open(input, output, 44100, 1024)
 stream.start
 
 
+@@run = true
+p "Started, press [Enter] to stop"
+gets
 
+p "Stopped"
 
-at_exit { 
-  stream.close
-  API.Pa_Terminate
-}
-
-
-@@written = false
-loop do 
-  sleep 1 
-  if(@@transformed.size >= SAMPLE_LENGTH && !@@written)
-    original_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
-    transformed_as_pairs = @@transformed.map {|x| [x].pack("l").unpack("ss")}
-    Writer.new(File.join(File.dirname(__FILE__), *%w[data transformed.wav]), Format.new(:stereo, :pcm_16, 44100)) do |writer|
-      transformed_as_pairs.each_slice(44100) do |pairs|
-        writer.write(Buffer.new(pairs, Format.new(:stereo, :pcm_16, 44100)))
-      end
-    end
-    Writer.new(File.join(File.dirname(__FILE__), *%w[data original.wav]), Format.new(:stereo, :pcm_16, 44100)) do |writer|
-      original_as_pairs.each_slice(44100) do |pairs|
-        writer.write(Buffer.new(pairs, Format.new(:stereo, :pcm_16, 44100)))
-      end
-    end
-    @@written = true
-  end
-  
-end
-
+API.Pa_Terminate
+exit! 0
