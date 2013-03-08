@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'bundler'
+require 'fftw3'
 Bundler.require
 
 include WaveFile
