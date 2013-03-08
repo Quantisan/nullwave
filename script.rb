@@ -71,6 +71,7 @@ class TestStream < FFI::PortAudio::Stream
       na    = NArray.to_na(data)
 
       fc  = FFTW3.fft(na) / na.length
+
       fc  = NArray.to_na(fc.to_a.map {|i| i * -1})
       nc  = FFTW3.ifft(fc)           
       # nb  = nc.real
@@ -79,6 +80,7 @@ class TestStream < FFI::PortAudio::Stream
       #Amplify
       as_amplitude = as_amplitude.map{|v| v * 2}
       output.write_array_of_int32(as_amplitude)
+
     rescue => e
       p e.message
     end    
@@ -105,7 +107,7 @@ output[:suggestedLatency] = 0
 output[:hostApiSpecificStreamInfo] = nil
 
 stream = TestStream.new
-stream.open(input, output, 44100, 1024)
+stream.open(input, output, 44100, WINDOW)
 stream.start
 
 
