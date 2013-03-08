@@ -30,6 +30,27 @@ def moving_average(array, window_size)
   ma
 end
 
+def flatten_peaks(array, allowed_standard_deviations=2)
+  find_peaks(array, allowed_standard_deviations) do |value, bottom, top|
+    (value > top ? top : (value < bottom ? bottom : value) )
+  end
+end
+
+def cancel_peaks(array, allowed_standard_deviations=2)
+  find_peaks(array, allowed_standard_deviations) do |value, bottom, top|
+    (value > top ? 0 : (value < bottom ? 0 : value) )
+  end
+end
+
+def find_peaks(array, allowed_standard_deviations)
+  mean = array.reduce(0){|sum, v| sum+=v; sum }/array.size
+  sd = (array.reduce(0){|sum, v| sum = (v - mean)**2}/array.size)**0.5
+  top = allowed_standard_deviations * sd
+  bottom = top * -1
+  array.map do |v|
+    yield(v, bottom, top)
+  end
+end
 
 @@original = []
 @@transformed = []
@@ -43,6 +64,10 @@ class TestStream < FFI::PortAudio::Stream
     begin
       
       data  = input.read_array_of_int32(frameCount)
+      # p data[10 .. 20]
+      data = cancel_peaks(data, 10)
+      data = moving_average(data, 50)
+      # p data[10 .. 20]
       na    = NArray.to_na(data)
 
       fc  = FFTW3.fft(na) / na.length
@@ -50,8 +75,10 @@ class TestStream < FFI::PortAudio::Stream
       nc  = FFTW3.ifft(fc)           
       # nb  = nc.real
       # x   = nb.to_a
-
-      output.write_array_of_int32(nc.real.to_a)
+      as_amplitude = nc.real.to_a
+      #Amplify
+      as_amplitude = as_amplitude.map{|v| v * 2}
+      output.write_array_of_int32(as_amplitude)
     rescue => e
       p e.message
     end    
